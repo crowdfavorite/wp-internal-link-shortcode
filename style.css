@@ -1,0 +1,54 @@
+
+#cfplsc_meta_box fieldset a.cfplsc_help {
+	background: #f5f5f5;
+	border-radius: 6px;
+	-moz-border-radius: 6px;
+	-webkit-border-radius: 6px;
+	color: #666;
+	display: block;
+	font-size: 11px;
+	float: right;
+	padding: 4px 6px;
+	text-decoration: none;
+}
+#cfplsc_meta_box fieldset label {
+	display: none;
+}
+#cfplsc_meta_box fieldset input {
+	width: 235px;
+}
+#cfplsc_meta_box .live_search_results {
+	position: relative;
+	z-index: 500;
+}
+#cfplsc_meta_box .live_search_results ul {
+	background: #fff;
+	list-style: none;
+	margin: 0 0 0 1px;
+	padding: 0 2px 3px;
+	position: absolute;
+	width: 230px;
+}
+#cfplsc_meta_box .live_search_results ul li {
+	border: 1px solid #eee;
+	border-top: 0;
+	cursor: pointer;
+	line-height: 100%;
+	margin: 0;
+	overflow: hidden;
+	padding: 5px;
+}
+#cfplsc_meta_box .live_search_results ul li.active,
+#cfplsc_meta_box .live_search_results ul li:hover {
+	background: #e0edf5;
+	font-weight: bold;
+}
+#cfplsc_meta_box .live_search_results input {
+	width: 200px;
+}
+#cfplsc_meta_box div.cfplsc_readme {
+	display: none;
+}
+#cfplsc_meta_box div.cfplsc_readme li {
+	margin: 0 10px 10px;
+}

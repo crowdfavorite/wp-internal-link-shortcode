@@ -1,14 +1,14 @@
 <?php
 /*
-Plugin Name: CF Internal Link Shortcode 
+Plugin Name: CF Internal Link Shortcode
 Plugin URI: http://crowdfavorite.com/wordpress/plugins/internal-link-shortcode
-Description: Site reorganization-proof internal linking via shortcodes, referencing page/post IDs. 
-Version: 1.0.1 
+Description: Site reorganization-proof internal linking via shortcodes, referencing page/post IDs.
+Version: 1.0.1
 Author: Crowd Favorite
 Author URI: http://crowdfavorite.com
 */
 
-// Copyright (c) 2010-2011 
+// Copyright (c) 2010-2011
 //   Crowd Favorite, Ltd. - http://crowdfavorite.com
 //   Alex King - http://alexking.org
 // All rights reserved.
@@ -21,42 +21,42 @@ Author URI: http://crowdfavorite.com
 // **********************************************************************
 // This program is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 // **********************************************************************
 
-load_plugin_textdomain('cf-internal-link-shortcode');
+load_plugin_textdomain( 'cf-internal-link-shortcode' );
 
-define('CFPLSC_SHORTCODE', 'link');
+define( 'CFPLSC_SHORTCODE', 'link' );
 
-function cfplsc_shortcode($atts, $wrapped = null) {
-	extract(shortcode_atts(array(
+function cfplsc_shortcode( $atts, $wrapped = null ) {
+	extract( shortcode_atts( array(
 		'id' => null,
 		'text' => null,
 		'class' => null,
 		'rel' => null
-	), $atts));
-	$wrapped = trim($wrapped);
-	if (!empty($wrapped)) {
+	), $atts ) );
+	$wrapped = trim( $wrapped );
+	if ( ! empty( $wrapped ) ) {
 		$text = $wrapped;
 	}
-	$text = trim($text);
-	$id = intval($id);
-	if (empty($id)) {
+	$text = trim( $text );
+	$id = intval( $id );
+	if ( empty( $id ) ) {
 		return $text;
 	}
-	$url = get_permalink($id);
-	if (empty($text)) {
-		$text = get_the_title($id);
+	$url = get_permalink( $id );
+	if ( empty( $text ) ) {
+		$text = get_the_title( $id );
 	}
-	empty($class) ? $class = '' : $class = ' class="'.esc_attr($class).'"';
-	empty($rel) ? $rel = '' : $rel = ' class="'.esc_attr($class).'"';
-	return '<a href="'.$url.'"'.$class.$rel.'>'.esc_html($text).'</a>';
+	empty( $class ) ? $class = '' : $class = ' class="' . esc_attr( $class ) . '"';
+	empty( $rel ) ? $rel = '' : $rel = ' class="' . esc_attr( $class ) . '"';
+	return '<a href="' . $url . '"' . $class . $rel . '>' . esc_html($text) . '</a>';
 }
-add_shortcode(CFPLSC_SHORTCODE, 'cfplsc_shortcode');
+add_shortcode( CFPLSC_SHORTCODE, 'cfplsc_shortcode' );
 
 function cfplsc_request_handler() {
-	if (!empty($_GET['cf_action'])) {
-		switch ($_GET['cf_action']) {
+	if ( ! empty( $_GET['cf_action'] ) ) {
+		switch ( $_GET['cf_action'] ) {
 			case 'cfplsc_id_lookup':
 				cfplsc_id_lookup();
 				break;
@@ -75,18 +75,18 @@ add_action('init', 'cfplsc_request_handler');
 function cfplsc_id_lookup() {
 	global $wpdb;
 	$title = stripslashes($_GET['post_title']);
-	$wild = '%'.$wpdb->escape($title).'%';
-	$posts = $wpdb->get_results("
+	$posts = $wpdb->get_results(
+		$wpdb->prepare("
 		SELECT *
 		FROM $wpdb->posts
 		WHERE (
-			post_title LIKE '$wild'
-			OR post_name LIKE '$wild'
+			post_title LIKE '%s'
+			OR post_name LIKE '%s'
 		)
 		AND post_status = 'publish'
 		ORDER BY post_title
 		LIMIT 25
-	");
+	", $title ) );
 	if (count($posts)) {
 		$output = '<ul>';
 		foreach ($posts as $post) {
@@ -101,175 +101,13 @@ function cfplsc_id_lookup() {
 	die();
 }
 
-function cfplsc_admin_js() {
-	header('Content-type: text/javascript');
-?>
-cfplsc_show_shortcode = function($elem) {
-	if ($elem.find('input').size() == 0) {
-		$elem.append('<input type="text" value="' + $elem.attr('title') + '" />').find('input').keydown(function(e) {
-			switch (e.which) {
-				case 13: // enter
-					return false;
-					break;
-				case 27: // esc
-					jQuery('#cfplsc_post_title').focus();
-					break;
-			}
-		}).focus().select();
-	}
-};
-jQuery(function($) {
-	$('#cfplsc_meta_box a.cfplsc_help').click(function() {
-		$('#cfplsc_meta_box div.cfplsc_readme').slideToggle(function() {
-			$('#cfplsc_post_title').css('background', '#fff');
-		});
-		return false;
-	});
-	$('#cfplsc_search_box').click(function() {
-		$('#cfplsc_post_title').focus().css('background', '#ffc');
-		return false;
-	});
-	$('#cfplsc_post_title').keyup(function(e) {
-		form = $('#cfplsc_meta_box');
-		term = $(this).val();
-// catch everything except up/down arrow
-		switch (e.which) {
-			case 27: // esc
-				form.find('.live_search_results ul').remove();
-				break;
-			case 13: // enter
-			case 38: // up
-			case 40: // down
-				break;
-			default:
-				if (term == '') {
-					form.find('.live_search_results ul').remove();
-				}
-				if (term.length > 2) {
-					$.get(
-						'<?php echo admin_url('index.php'); ?>',
-						{
-							cf_action: 'cfplsc_id_lookup',
-							post_title: term
-						},
-						function(response) {
-							$('#cfplsc_meta_box div.live_search_results').html(response).find('li').click(function() {
-								$('#cfplsc_meta_box .active').removeClass('active');
-								$(this).addClass('active');
-								cfplsc_show_shortcode($(this));
-								return false;
-							});
-						},
-						'html'
-					);
-				}
-				break;
-		}
-	}).keydown(function(e) {
-// catch arrow up/down here
-		form = $('#cfplsc_meta_box');
-		if (form.find('.live_search_results ul li').size()) {
-			switch (e.which) {
-				case 13: // enter
-					active = form.find('.live_search_results ul li.active');
-					if (active.size()) {
-						cfplsc_show_shortcode(active);
-					}
-					return false;
-					break;
-				case 40: // down
-					if (!form.find('.live_search_results ul li.active').size()) {
-						form.find('.live_search_results ul li:first-child').addClass('active');
-					}
-					else {
-						form.find('.live_search_results ul li.active').next('li').addClass('active').prev('li').removeClass('active');
-					}
-					return false;
-					break;
-				case 38: // up
-					if (!form.find('.live_search_results ul li.active').size()) {
-						form.find('.live_search_results ul li:last-child').addClass('active');
-					}
-					else {
-						form.find('.live_search_results ul li.active').prev('li').addClass('active').next('li').removeClass('active');
-					}
-					return false;
-					break;
-			}
-		}
-	});
-});
-<?php
-	die();
-}
-if (is_admin()) {
-	wp_enqueue_script('cfplsc_admin_js', trailingslashit(get_bloginfo('url')).'?cf_action=cfplsc_admin_js', array('jquery'));
-}
+function cfplsc_admin_enqueue() {
+	wp_enqueue_script( 'cfplsc_admin_js', plugin_dir_url( __FILE__ ) . '/script.js', array('jquery') );
+	wp_localize_script( 'cfplsc_admin_js', 'Admin', array( 'index_url' => admin_url('index.php') ) );
 
-function cfplsc_admin_css() {
-	header('Content-type: text/css');
-?>
-#cfplsc_meta_box fieldset a.cfplsc_help {
-	background: #f5f5f5;
-	border-radius: 6px;
-	-moz-border-radius: 6px;
-	-webkit-border-radius: 6px;
-	color: #666;
-	display: block;
-	font-size: 11px;
-	float: right;
-	padding: 4px 6px;
-	text-decoration: none;
+	wp_enqueue_style( 'cfplsc_admin_css', plugin_dir_url( __FILE__ ) . '/style.css' );
 }
-#cfplsc_meta_box fieldset label {
-	display: none;
-}
-#cfplsc_meta_box fieldset input {
-	width: 235px;
-}
-#cfplsc_meta_box .live_search_results {
-	position: relative;
-	z-index: 500;
-}	
-#cfplsc_meta_box .live_search_results ul {
-	background: #fff;
-	list-style: none;
-	margin: 0 0 0 1px;
-	padding: 0 2px 3px;
-	position: absolute;
-	width: 230px;
-}
-#cfplsc_meta_box .live_search_results ul li {
-	border: 1px solid #eee;
-	border-top: 0;
-	cursor: pointer;
-	line-height: 100%;
-	margin: 0;
-	overflow: hidden;
-	padding: 5px;
-}
-#cfplsc_meta_box .live_search_results ul li.active,
-#cfplsc_meta_box .live_search_results ul li:hover {
-	background: #e0edf5;
-	font-weight: bold;
-}
-#cfplsc_meta_box .live_search_results input {
-	width: 200px;
-}
-#cfplsc_meta_box div.cfplsc_readme {
-	display: none;
-}
-#cfplsc_meta_box div.cfplsc_readme li {
-	margin: 0 10px 10px;
-}
-<?php
-	die();
-}
-
-function cfplsc_admin_head() {
-	echo '<link rel="stylesheet" type="text/css" href="'.trailingslashit(get_bloginfo('url')).'?cf_action=cfplsc_admin_css" />';
-}
-add_action('admin_print_styles', 'cfplsc_admin_head');
+add_action( 'admin_enqueue_scripts', 'cfplsc_admin_enqueue' );
 
 function cfplsc_meta_box() {
 ?>
@@ -302,11 +140,11 @@ function cfplsc_meta_box() {
 function cfplsc_add_meta_box() {
 	add_meta_box('cfplsc_meta_box', __('Internal Link Shortcode Lookup', 'cf-internal-link-shortcode'), 'cfplsc_meta_box', 'post', 'side');
 	add_meta_box('cfplsc_meta_box', __('Internal Link Shortcode Lookup', 'cf-internal-link-shortcode'), 'cfplsc_meta_box', 'page', 'side');
-	
+
 	// Public non built in post types
 	$args=array(
 		'public'   => true,
-		'_builtin' => false	
+		'_builtin' => false
 	);
 	$output = 'names';
 	$post_types = get_post_types($args,$output);
