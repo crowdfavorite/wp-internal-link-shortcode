@@ -1,14 +1,14 @@
 <?php
 /*
-Plugin Name: CF Internal Link Shortcode 
+Plugin Name: CF Internal Link Shortcode
 Plugin URI: http://crowdfavorite.com/wordpress/plugins/internal-link-shortcode
-Description: Site reorganization-proof internal linking via shortcodes, referencing page/post IDs. 
-Version: 1.0.1 
+Description: Site reorganization-proof internal linking via shortcodes, referencing page/post IDs.
+Version: 1.0.1
 Author: Crowd Favorite
 Author URI: http://crowdfavorite.com
 */
 
-// Copyright (c) 2010-2011 
+// Copyright (c) 2010-2011
 //   Crowd Favorite, Ltd. - http://crowdfavorite.com
 //   Alex King - http://alexking.org
 // All rights reserved.
@@ -21,7 +21,7 @@ Author URI: http://crowdfavorite.com
 // **********************************************************************
 // This program is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 // **********************************************************************
 
 load_plugin_textdomain('cf-internal-link-shortcode');
@@ -75,18 +75,18 @@ add_action('init', 'cfplsc_request_handler');
 function cfplsc_id_lookup() {
 	global $wpdb;
 	$title = stripslashes($_GET['post_title']);
-	$wild = '%'.$wpdb->escape($title).'%';
-	$posts = $wpdb->get_results("
+	$posts = $wpdb->get_results(
+		$wpdb->prepare( "
 		SELECT *
 		FROM $wpdb->posts
 		WHERE (
-			post_title LIKE '$wild'
-			OR post_name LIKE '$wild'
+			post_title LIKE '%s'
+			OR post_name LIKE '%s'
 		)
 		AND post_status = 'publish'
 		ORDER BY post_title
 		LIMIT 25
-	");
+	", $title ) );
 	if (count($posts)) {
 		$output = '<ul>';
 		foreach ($posts as $post) {
@@ -230,7 +230,7 @@ function cfplsc_admin_css() {
 #cfplsc_meta_box .live_search_results {
 	position: relative;
 	z-index: 500;
-}	
+}
 #cfplsc_meta_box .live_search_results ul {
 	background: #fff;
 	list-style: none;
@@ -302,11 +302,11 @@ function cfplsc_meta_box() {
 function cfplsc_add_meta_box() {
 	add_meta_box('cfplsc_meta_box', __('Internal Link Shortcode Lookup', 'cf-internal-link-shortcode'), 'cfplsc_meta_box', 'post', 'side');
 	add_meta_box('cfplsc_meta_box', __('Internal Link Shortcode Lookup', 'cf-internal-link-shortcode'), 'cfplsc_meta_box', 'page', 'side');
-	
+
 	// Public non built in post types
 	$args=array(
 		'public'   => true,
-		'_builtin' => false	
+		'_builtin' => false
 	);
 	$output = 'names';
 	$post_types = get_post_types($args,$output);
