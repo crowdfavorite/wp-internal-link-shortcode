@@ -1,14 +1,14 @@
 <?php
 /*
-Plugin Name: CF Internal Link Shortcode 
+Plugin Name: CF Internal Link Shortcode
 Plugin URI: http://crowdfavorite.com/wordpress/plugins/internal-link-shortcode
-Description: Site reorganization-proof internal linking via shortcodes, referencing page/post IDs. 
-Version: 1.0.1 
+Description: Site reorganization-proof internal linking via shortcodes, referencing page/post IDs.
+Version: 1.0.1
 Author: Crowd Favorite
 Author URI: http://crowdfavorite.com
 */
 
-// Copyright (c) 2010-2011 
+// Copyright (c) 2010-2011
 //   Crowd Favorite, Ltd. - http://crowdfavorite.com
 //   Alex King - http://alexking.org
 // All rights reserved.
@@ -21,42 +21,42 @@ Author URI: http://crowdfavorite.com
 // **********************************************************************
 // This program is distributed in the hope that it will be useful, but
 // WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 // **********************************************************************
 
-load_plugin_textdomain('cf-internal-link-shortcode');
+load_plugin_textdomain( 'cf-internal-link-shortcode' );
 
-define('CFPLSC_SHORTCODE', 'link');
+define( 'CFPLSC_SHORTCODE', 'link' );
 
-function cfplsc_shortcode($atts, $wrapped = null) {
-	extract(shortcode_atts(array(
+function cfplsc_shortcode( $atts, $wrapped = null ) {
+	extract( shortcode_atts( array(
 		'id' => null,
 		'text' => null,
 		'class' => null,
 		'rel' => null
-	), $atts));
-	$wrapped = trim($wrapped);
-	if (!empty($wrapped)) {
+	), $atts ) );
+	$wrapped = trim( $wrapped );
+	if ( ! empty( $wrapped ) ) {
 		$text = $wrapped;
 	}
-	$text = trim($text);
-	$id = intval($id);
-	if (empty($id)) {
+	$text = trim( $text );
+	$id = intval( $id );
+	if ( empty( $id ) ) {
 		return $text;
 	}
-	$url = get_permalink($id);
-	if (empty($text)) {
-		$text = get_the_title($id);
+	$url = get_permalink( $id );
+	if ( empty( $text ) ) {
+		$text = get_the_title( $id );
 	}
-	empty($class) ? $class = '' : $class = ' class="'.esc_attr($class).'"';
-	empty($rel) ? $rel = '' : $rel = ' class="'.esc_attr($class).'"';
-	return '<a href="'.$url.'"'.$class.$rel.'>'.esc_html($text).'</a>';
+	empty( $class ) ? $class = '' : $class = ' class="' . esc_attr( $class ) . '"';
+	empty( $rel ) ? $rel = '' : $rel = ' class="' . esc_attr( $class ) . '"';
+	return '<a href="' . $url . '"' . $class . $rel . '>' . esc_html($text) . '</a>';
 }
-add_shortcode(CFPLSC_SHORTCODE, 'cfplsc_shortcode');
+add_shortcode( CFPLSC_SHORTCODE, 'cfplsc_shortcode' );
 
 function cfplsc_request_handler() {
-	if (!empty($_GET['cf_action'])) {
-		switch ($_GET['cf_action']) {
+	if ( ! empty( $_GET['cf_action'] ) ) {
+		switch ( $_GET['cf_action'] ) {
 			case 'cfplsc_id_lookup':
 				cfplsc_id_lookup();
 				break;
@@ -100,6 +100,13 @@ function cfplsc_id_lookup() {
 	echo $output;
 	die();
 }
+
+function cfplsc_admin_enqueue() {
+	wp_enqueue_script( 'cfplsc_admin_js', trailingslashit(get_bloginfo('url')).'?cf_action=cfplsc_admin_js', array('jquery') );
+
+	wp_enqueue_style( 'cfplsc_admin_css', trailingslashit(get_bloginfo('url')).'?cf_action=cfplsc_admin_css' );
+}
+add_action( 'admin_enqueue_scripts', 'cfplsc_admin_enqueue' );
 
 function cfplsc_admin_js() {
 	header('Content-type: text/javascript');
@@ -202,9 +209,6 @@ jQuery(function($) {
 <?php
 	die();
 }
-if (is_admin()) {
-	wp_enqueue_script('cfplsc_admin_js', trailingslashit(get_bloginfo('url')).'?cf_action=cfplsc_admin_js', array('jquery'));
-}
 
 function cfplsc_admin_css() {
 	header('Content-type: text/css');
@@ -230,7 +234,7 @@ function cfplsc_admin_css() {
 #cfplsc_meta_box .live_search_results {
 	position: relative;
 	z-index: 500;
-}	
+}
 #cfplsc_meta_box .live_search_results ul {
 	background: #fff;
 	list-style: none;
@@ -266,11 +270,6 @@ function cfplsc_admin_css() {
 	die();
 }
 
-function cfplsc_admin_head() {
-	echo '<link rel="stylesheet" type="text/css" href="'.trailingslashit(get_bloginfo('url')).'?cf_action=cfplsc_admin_css" />';
-}
-add_action('admin_print_styles', 'cfplsc_admin_head');
-
 function cfplsc_meta_box() {
 ?>
 <fieldset>
@@ -302,11 +301,11 @@ function cfplsc_meta_box() {
 function cfplsc_add_meta_box() {
 	add_meta_box('cfplsc_meta_box', __('Internal Link Shortcode Lookup', 'cf-internal-link-shortcode'), 'cfplsc_meta_box', 'post', 'side');
 	add_meta_box('cfplsc_meta_box', __('Internal Link Shortcode Lookup', 'cf-internal-link-shortcode'), 'cfplsc_meta_box', 'page', 'side');
-	
+
 	// Public non built in post types
 	$args=array(
 		'public'   => true,
-		'_builtin' => false	
+		'_builtin' => false
 	);
 	$output = 'names';
 	$post_types = get_post_types($args,$output);
